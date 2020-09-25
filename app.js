@@ -33,8 +33,18 @@ app.use(express.urlencoded({ extended: false }));
 // Public
 app.use(express.static(path.join(__dirname, "public")));
 
+const verifyToken = require("./middleware/verifyToken");
+
 const authRoute = require("./routes/auth.route");
 const usersRoute = require("./routes/users.route");
+app.get("/api/products", verifyToken, (req, res) => {
+  res.json({
+    products: [
+      { name: "ps5", price: 499 },
+      { name: "xbox", price: 399 },
+    ],
+  });
+});
 
 // Router
 app.use("/api/auth", authRoute);

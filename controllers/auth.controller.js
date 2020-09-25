@@ -33,3 +33,37 @@ exports.Register = async (req, res) => {
     res.status(400).json({ message: err });
   }
 };
+
+exports.UserLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  // Si l'email n'existe pas
+  const findEmail = await querysql(
+    "SELECT COUNT(*) AS cnt FROM user WHERE email = ?",
+    email
+  );
+  if (!findEmail[0].cnt > 0)
+    return res
+      .status(400)
+      .json({ message: "Il n'y a pas d'utilisateur avec cet email" });
+
+  // Vérifier le mot de passe
+  const user = await querysql(
+    "SELECT id, email, password FROM user WHERE email = ?",
+    email
+  );
+  const passwordCheck = await bcrypt.compare(password, user[0].password);
+  if (!passwordCheck)
+    return res.status(400).json({ message: "Mot de passe incorrect" });
+
+  try {
+    // Créer le token
+    const token = jwt.sign(
+      { _id: user[0].id },
+      process.env.SECRET_TOKEN,
+      (err, token) => res.header("authorization", token).json({ token })
+    );
+  } catch (err) {
+    res.status(400).json({ message: err });
+  }
+};
